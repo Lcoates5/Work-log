@@ -125,4 +125,133 @@ function addDepartment() {
     });
   }
   
+  function addEmployee() {
+    client.query(`SELECT * FROM role`, (err, res) => {
+      if (err) throw err;
+      const roles = res.rows.map((role) => {
+        return {
+          name: role.title,
+          value: role.id,
+        };
+      });
+      client.query(`SELECT * FROM employee`, (err, res) => {
+        if (err) throw err;
+        const employeeArray = res.rows.map((employee) => {
+          return {
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id,
+          };
+        });
+        inquirer
+          .prompt([
+            {
+              type: "input",
+              name: "first_name",
+              message: "What is the employee's first name?",
+            },
+            {
+              type: "input",
+              name: "last_name",
+              message: "What is the employee's last name?",
+            },
+            {
+              type: "list",
+              name: "role_id",
+              message: "Select Role",
+              choices: roles,
+            },
+            {
+              type: "list",
+              name: "manager_id",
+              message: "Select Manager",
+              choices: employeeArray,
+            },
+          ])
+          .then((answers) => {
+            client.query(
+              `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)`,
+              [
+                answers.first_name,
+                answers.last_name,
+                answers.role_id,
+                answers.manager_id,
+              ],
+              (err, res) => {
+                if (err) throw err;
+                console.log("Employee added successfully");
+                menu();
+              }
+            );
+          });
+      });
+    });
+  }
   
+  function updateEmployeeRole() {
+    client.query(`SELECT * FROM employee`, (err, res) => {
+      if (err) throw err;
+      const employees = res.rows.map((employee) => {
+        return {
+          name: `${employee.first_name} ${employee.last_name}`,
+          value: employee.id,
+        };
+      });
+      client.query(`SELECT * FROM role`, (err, res) => {
+        if (err) throw err;
+        const roles = res.rows.map((role) => {
+          return {
+            name: role.title,
+            value: role.id,
+          };
+        });
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "employee_id",
+              message: "Select Employee",
+              choices: employees,
+            },
+            {
+              type: "list",
+              name: "role_id",
+              message: "Select Role",
+              choices: roles,
+            },
+          ])
+          .then((answers) => {
+            client.query(
+              `UPDATE employee SET role_id = $1 WHERE id = $2`,
+              [answers.role_id, answers.employee_id],
+              (err, res) => {
+                if (err) throw err;
+                console.log("Employee role updated successfully");
+                menu();
+              }
+            );
+          });
+      });
+    });
+  };
+  function viewRoles() {
+    client.query(`SELECT * FROM role`, (err, res) => {
+      if (err) throw err;
+      console.table(res.rows);
+      menu();
+    });
+  };
+  function viewEmployees() {
+    client.query(`SELECT * FROM employee`, (err, res) => {
+      if (err) throw err;
+      console.table(res.rows);
+      menu();
+    });
+  };
+  function viewDepartments() {
+    client.query(`SELECT * FROM department`, (err, res) => {
+      if (err) throw err;
+      console.table(res.rows);
+      menu();
+    });
+  };
+  menu();
