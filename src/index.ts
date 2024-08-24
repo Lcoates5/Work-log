@@ -61,3 +61,68 @@ function menu() {
       }
     });
 }
+function addDepartment() {
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          name: "name",
+          message: "What is the name of the department?",
+        },
+      ])
+      .then((answers) => {
+        client.query(
+          `INSERT INTO department (name) VALUES ($1)`,
+          [answers.name],
+          (err, res) => {
+            if (err) throw err;
+            console.log("Department added successfully");
+            menu();
+          }
+        );
+      });
+  }
+  function addRole() {
+    client.query(`SELECT * FROM department`, (err, res) => {
+      if (err) throw err;
+      const departments = res.rows.map((department) => {
+        return {
+          name: department.name,
+          value: department.id,
+        };
+  
+        inquirer
+          .prompt([
+            {
+              type: "input",
+              name: "title",
+              message: "What is the title of the role?",
+            },
+            {
+              type: "list",
+              name: "department_id",
+              message: "What department does the role belong to?",
+              choices: departments,
+            },
+            {
+              type: "input",
+              name: "salary",
+              message: "What is the salary of the role?",
+            },
+          ])
+          .then((answers) => {
+            client.query(
+              `INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)`,
+              [answers.title, answers.salary, answers.department_id],
+              (err, res) => {
+                if (err) throw err;
+                console.log("Role added successfully");
+                menu();
+              }
+            );
+          });
+      });
+    });
+  }
+  
+  
