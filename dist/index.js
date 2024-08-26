@@ -1,6 +1,5 @@
 import inquirer from "inquirer";
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 import pg from "pg";
 const { Pool } = pg;
 const pool = new Pool({
@@ -11,7 +10,56 @@ const pool = new Pool({
     port: 5432,
 });
 const client = await pool.connect();
-function createDepartment() {
+function menu() {
+    inquirer
+        .prompt([
+        {
+            type: "list",
+            name: "menu",
+            message: "What would you like to do?",
+            choices: [
+                "Add Employee",
+                "Add Role",
+                "Add Department",
+                "Update Employee Role",
+                "View Employees",
+                "View Roles",
+                "View Departments",
+                "Exit",
+            ],
+        },
+    ])
+        .then((answers) => {
+        switch (answers.menu) {
+            case "Add Employee":
+                addEmployee();
+                break;
+            case "Add Role":
+                addRole();
+                break;
+            case "Add Department":
+                addDepartment();
+                break;
+            case "Update Employee Role":
+                updateEmployeeRole();
+                break;
+            case "View Employees":
+                viewEmployees();
+                break;
+            case "View Roles":
+                viewRoles();
+                break;
+            case "View Departments":
+                viewDepartments();
+                break;
+            case "Exit":
+                pool.end();
+                process.exit();
+                break;
+        }
+    });
+}
+function addDepartment() {
     inquirer
         .prompt([
         {
@@ -21,6 +69,184 @@ function createDepartment() {
         },
     ])
         .then((answers) => {
-        client.query(`INSERT INTO department (name) VALUES ('${answers.name}')`);
+        client.query(`INSERT INTO department (name) VALUES ($1)`, [answers.name], (err, res) => {
+            if (err)
+                throw err;
+            console.log("Department added successfully");
+            menu();
+        });
     });
 }
+function addRole() {
+    client.query(`SELECT * FROM department`, (err, res) => {
+        if (err)
+            throw err;
+        const departments = res.rows.map((department) => {
+            return {
+                name: department.name,
+                value: department.id,
+            };
+            inquirer
+                .prompt([
+                {
+                    type: "input",
+                    name: "title",
+                    message: "What is the title of the role?",
+                },
+                {
+                    type: "list",
+                    name: "department_id",
+                    message: "What department does the role belong to?",
+                    choices: departments,
+                },
+                {
+                    type: "input",
+                    name: "salary",
+                    message: "What is the salary of the role?",
+                },
+            ])
+                .then((answers) => {
+                client.query(`INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)`, [answers.title, answers.salary, answers.department_id], (err, res) => {
+                    if (err)
+                        throw err;
+                    console.log("Role added successfully");
+                    menu();
+                });
+            });
+        });
+    });
+}
+function addEmployee() {
+    client.query(`SELECT * FROM role`, (err, res) => {
+        if (err)
+            throw err;
+        const roles = res.rows.map((role) => {
+            return {
+                name: role.title,
+                value: role.id,
+            };
+        });
+        client.query(`SELECT * FROM employee`, (err, res) => {
+            if (err)
+                throw err;
+            const employeeArray = res.rows.map((employee) => {
+                return {
+                    name: `${employee.first_name} ${employee.last_name}`,
+                    value: employee.id,
+                };
+            });
+            inquirer
+                .prompt([
+                {
+                    type: "input",
+                    name: "first_name",
+                    message: "What is the employee's first name?",
+                },
+                {
+                    type: "input",
+                    name: "last_name",
+                    message: "What is the employee's last name?",
+                },
+                {
+                    type: "list",
+                    name: "role_id",
+                    message: "Select Role",
+                    choices: roles,
+                },
+                {
+                    type: "list",
+                    name: "manager_id",
+                    message: "Select Manager",
+                    choices: employeeArray,
+                },
+            ])
+                .then((answers) => {
+                client.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)`, [
+                    answers.first_name,
+                    answers.last_name,
+                    answers.role_id,
+                    answers.manager_id,
+                ], (err, res) => {
+                    if (err)
+                        throw err;
+                    console.log("Employee added successfully");
+                    menu();
+                });
+            });
+        });
+    });
+}
+function updateEmployeeRole() {
+    client.query(`SELECT * FROM employee`, (err, res) => {
+        if (err)
+            throw err;
+        const employees = res.rows.map((employee) => {
+            return {
+                name: `${employee.first_name} ${employee.last_name}`,
+                value: employee.id,
+            };
+        });
+        client.query(`SELECT * FROM role`, (err, res) => {
+            if (err)
+                throw err;
+            const roles = res.rows.map((role) => {
+                return {
+                    name: role.title,
+                    value: role.id,
+                };
+            });
+            inquirer
+                .prompt([
+                {
+                    type: "list",
+                    name: "employee_id",
+                    message: "Select Employee",
+                    choices: employees,
+                },
+                {
+                    type: "list",
+                    name: "role_id",
+                    message: "Select Role",
+                    choices: roles,
+                },
+            ])
+                .then((answers) => {
+                client.query(`UPDATE employee SET role_id = $1 WHERE id = $2`, [answers.role_id, answers.employee_id], (err, res) => {
+                    if (err)
+                        throw err;
+                    console.log("Employee role updated successfully");
+                    menu();
+                });
+            });
+        });
+    });
+}
+;
+function viewRoles() {
+    client.query(`SELECT * FROM role`, (err, res) => {
+        if (err)
+            throw err;
+        console.table(res.rows);
+        menu();
+    });
+}
+;
+function viewEmployees() {
+    client.query(`SELECT * FROM employee`, (err, res) => {
+        if (err)
+            throw err;
+        console.table(res.rows);
+        menu();
+    });
+}
+;
+function viewDepartments() {
+    client.query(`SELECT * FROM department`, (err, res) => {
+        if (err)
+            throw err;
+        console.table(res.rows);
+        menu();
+    });
+}
+;
+menu();
