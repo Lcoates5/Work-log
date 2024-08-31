@@ -1,6 +1,7 @@
 import inquirer from "inquirer";
 import "dotenv/config";
 import pg from "pg";
+// Connect to the database
 const { Pool } = pg;
 const pool = new Pool({
     host: "localhost",
@@ -10,6 +11,7 @@ const pool = new Pool({
     port: 5432,
 });
 const client = await pool.connect();
+// Function to display the menu
 function menu() {
     inquirer
         .prompt([
@@ -43,13 +45,13 @@ function menu() {
             case "Update Employee Role":
                 updateEmployeeRole();
                 break;
-            case "View Employees":
+            case "View All Employees":
                 viewEmployees();
                 break;
-            case "View Roles":
+            case "View All Roles":
                 viewRoles();
                 break;
-            case "View Departments":
+            case "View All Departments":
                 viewDepartments();
                 break;
             case "Exit":
@@ -59,6 +61,7 @@ function menu() {
         }
     });
 }
+// Function to add a department
 function addDepartment() {
     inquirer
         .prompt([
@@ -68,6 +71,7 @@ function addDepartment() {
             message: "What is the name of the department?",
         },
     ])
+        // Insert the department into the database
         .then((answers) => {
         client.query(`INSERT INTO department (name) VALUES ($1)`, [answers.name], (err, res) => {
             if (err)
@@ -77,6 +81,7 @@ function addDepartment() {
         });
     });
 }
+// Function to add a role
 function addRole() {
     client.query(`SELECT * FROM department`, (err, res) => {
         if (err)
@@ -86,36 +91,38 @@ function addRole() {
                 name: department.name,
                 value: department.id,
             };
-            inquirer
-                .prompt([
-                {
-                    type: "input",
-                    name: "title",
-                    message: "What is the title of the role?",
-                },
-                {
-                    type: "list",
-                    name: "department_id",
-                    message: "What department does the role belong to?",
-                    choices: departments,
-                },
-                {
-                    type: "input",
-                    name: "salary",
-                    message: "What is the salary of the role?",
-                },
-            ])
-                .then((answers) => {
-                client.query(`INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)`, [answers.title, answers.salary, answers.department_id], (err, res) => {
-                    if (err)
-                        throw err;
-                    console.log("Role added successfully");
-                    menu();
-                });
+        });
+        inquirer
+            .prompt([
+            {
+                type: "input",
+                name: "title",
+                message: "What is the title of the role?",
+            },
+            {
+                type: "list",
+                name: "department_id",
+                message: "What department does the role belong to?",
+                choices: departments,
+            },
+            {
+                type: "input",
+                name: "salary",
+                message: "What is the salary of the role?",
+            },
+        ])
+            // Insert the role into the database
+            .then((answers) => {
+            client.query(`INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)`, [answers.title, answers.salary, answers.department_id], (err, res) => {
+                if (err)
+                    throw err;
+                console.log("Role added successfully");
+                menu();
             });
         });
     });
 }
+;
 function addEmployee() {
     client.query(`SELECT * FROM role`, (err, res) => {
         if (err)
@@ -126,6 +133,7 @@ function addEmployee() {
                 value: role.id,
             };
         });
+        // Get the list of employees to use as managers
         client.query(`SELECT * FROM employee`, (err, res) => {
             if (err)
                 throw err;
@@ -160,6 +168,7 @@ function addEmployee() {
                     choices: employeeArray,
                 },
             ])
+                // Insert the employee into the database
                 .then((answers) => {
                 client.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)`, [
                     answers.first_name,
@@ -176,6 +185,7 @@ function addEmployee() {
         });
     });
 }
+// Function to update an employee's role
 function updateEmployeeRole() {
     client.query(`SELECT * FROM employee`, (err, res) => {
         if (err)
@@ -186,6 +196,7 @@ function updateEmployeeRole() {
                 value: employee.id,
             };
         });
+        // Get the list of roles to choose from
         client.query(`SELECT * FROM role`, (err, res) => {
             if (err)
                 throw err;
@@ -195,6 +206,7 @@ function updateEmployeeRole() {
                     value: role.id,
                 };
             });
+            // Prompt the user to select an employee and role
             inquirer
                 .prompt([
                 {
@@ -210,6 +222,7 @@ function updateEmployeeRole() {
                     choices: roles,
                 },
             ])
+                // Update the employee's role in the database
                 .then((answers) => {
                 client.query(`UPDATE employee SET role_id = $1 WHERE id = $2`, [answers.role_id, answers.employee_id], (err, res) => {
                     if (err)
@@ -222,6 +235,7 @@ function updateEmployeeRole() {
     });
 }
 ;
+// Function to view all roles
 function viewRoles() {
     client.query(`SELECT * FROM role`, (err, res) => {
         if (err)
@@ -231,6 +245,7 @@ function viewRoles() {
     });
 }
 ;
+// Function to view all employees
 function viewEmployees() {
     client.query(`SELECT * FROM employee`, (err, res) => {
         if (err)
@@ -240,6 +255,7 @@ function viewEmployees() {
     });
 }
 ;
+// Function to view all departments
 function viewDepartments() {
     client.query(`SELECT * FROM department`, (err, res) => {
         if (err)
