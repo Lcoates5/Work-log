@@ -45,13 +45,13 @@ function menu() {
             case "Update Employee Role":
                 updateEmployeeRole();
                 break;
-            case "View All Employees":
+            case "View Employees":
                 viewEmployees();
                 break;
-            case "View All Roles":
+            case "View Roles":
                 viewRoles();
                 break;
-            case "View All Departments":
+            case "View Departments":
                 viewDepartments();
                 break;
             case "Exit":
@@ -257,9 +257,11 @@ function viewEmployees() {
 ;
 // Function to view all departments
 function viewDepartments() {
+    console.log("Viewing all departments");
     client.query(`SELECT * FROM department`, (err, res) => {
         if (err)
             throw err;
+        console.log("Departments");
         console.table(res.rows);
         menu();
     });

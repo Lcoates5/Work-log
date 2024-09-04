@@ -4,11 +4,11 @@ INSERT INTO department (name) VALUES ('Sales');
 INSERT INTO department (name) VALUES ('Finance');
 INSERT INTO department (name) VALUES ('Legal');
 
-INSERT INTO roles (name, salary, department_id) VALUES ('Software Engineer', 120000, 1);
-INSERT INTO roles (name, salary, department_id) VALUES ('Sales Lead', 80000, 2);
-INSERT INTO roles (name, salary, department_id) VALUES ('Accountant', 70000, 3);
-INSERT INTO roles (name, salary, department_id) VALUES ('Sales Person', 70000, 4);
-INSERT INTO roles (name, salary, department_id) VALUES ('Lawyer', 90000, 5);
+INSERT INTO role (title, salary, department_id) VALUES ('Software Engineer', 120000, 1);
+INSERT INTO role (title, salary, department_id) VALUES ('Sales Lead', 80000, 2);
+INSERT INTO role (title, salary, department_id) VALUES ('Accountant', 70000, 3);
+INSERT INTO role (title, salary, department_id) VALUES ('Sales Person', 70000, 4);
+INSERT INTO role (title, salary, department_id) VALUES ('Lawyer', 90000, 5);
 
 INSERT INTO employee (first_name, last_name, role_id) VALUES ('Alice', 'Johnson', 1);
 INSERT INTO employee (first_name, last_name, role_id) VALUES ('Bob', 'Smith', 2);
