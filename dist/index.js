@@ -10,7 +10,6 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     port: 5432,
 });
-const client = await pool.connect();
 // Function to display the menu
 function menu() {
     inquirer
@@ -72,8 +71,8 @@ function addDepartment() {
         },
     ])
         // Insert the department into the database
-        .then((answers) => {
-        client.query(`INSERT INTO department (name) VALUES ($1)`, [answers.name], (err, res) => {
+        .then(async (answers) => {
+        pool.query(`INSERT INTO department (name) VALUES ($1)`, [answers.name], (err, _res) => {
             if (err)
                 throw err;
             console.log("Department added successfully");
@@ -83,7 +82,7 @@ function addDepartment() {
 }
 // Function to add a role
 function addRole() {
-    client.query(`SELECT * FROM department`, (err, res) => {
+    pool.query(`SELECT * FROM department`, (err, res) => {
         if (err)
             throw err;
         const departments = res.rows.map((department) => {
@@ -113,7 +112,7 @@ function addRole() {
         ])
             // Insert the role into the database
             .then((answers) => {
-            client.query(`INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)`, [answers.title, answers.salary, answers.department_id], (err, res) => {
+            pool.query(`INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)`, [answers.title, answers.salary, answers.department_id], (err, _res) => {
                 if (err)
                     throw err;
                 console.log("Role added successfully");
@@ -124,7 +123,7 @@ function addRole() {
 }
 ;
 function addEmployee() {
-    client.query(`SELECT * FROM role`, (err, res) => {
+    pool.query(`SELECT * FROM role`, (err, res) => {
         if (err)
             throw err;
         const roles = res.rows.map((role) => {
@@ -134,7 +133,7 @@ function addEmployee() {
             };
         });
         // Get the list of employees to use as managers
-        client.query(`SELECT * FROM employee`, (err, res) => {
+        pool.query(`SELECT * FROM employee`, (err, res) => {
             if (err)
                 throw err;
             const employeeArray = res.rows.map((employee) => {
@@ -170,12 +169,12 @@ function addEmployee() {
             ])
                 // Insert the employee into the database
                 .then((answers) => {
-                client.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)`, [
+                pool.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)`, [
                     answers.first_name,
                     answers.last_name,
                     answers.role_id,
                     answers.manager_id,
-                ], (err, res) => {
+                ], (err, _res) => {
                     if (err)
                         throw err;
                     console.log("Employee added successfully");
@@ -187,7 +186,7 @@ function addEmployee() {
 }
 // Function to update an employee's role
 function updateEmployeeRole() {
-    client.query(`SELECT * FROM employee`, (err, res) => {
+    pool.query(`SELECT * FROM employee`, (err, res) => {
         if (err)
             throw err;
         const employees = res.rows.map((employee) => {
@@ -197,7 +196,7 @@ function updateEmployeeRole() {
             };
         });
         // Get the list of roles to choose from
-        client.query(`SELECT * FROM role`, (err, res) => {
+        pool.query(`SELECT * FROM role`, (err, res) => {
             if (err)
                 throw err;
             const roles = res.rows.map((role) => {
@@ -224,7 +223,7 @@ function updateEmployeeRole() {
             ])
                 // Update the employee's role in the database
                 .then((answers) => {
-                client.query(`UPDATE employee SET role_id = $1 WHERE id = $2`, [answers.role_id, answers.employee_id], (err, res) => {
+                pool.query(`UPDATE employee SET role_id = $1 WHERE id = $2`, [answers.role_id, answers.employee_id], (err, res) => {
                     if (err)
                         throw err;
                     console.log("Employee role updated successfully");
@@ -237,7 +236,7 @@ function updateEmployeeRole() {
 ;
 // Function to view all roles
 function viewRoles() {
-    client.query(`SELECT * FROM role`, (err, res) => {
+    pool.query(`SELECT * FROM role`, (err, res) => {
         if (err)
             throw err;
         console.table(res.rows);
@@ -247,7 +246,7 @@ function viewRoles() {
 ;
 // Function to view all employees
 function viewEmployees() {
-    client.query(`SELECT * FROM employee`, (err, res) => {
+    pool.query(`SELECT * FROM employee`, (err, res) => {
         if (err)
             throw err;
         console.table(res.rows);
@@ -258,7 +257,7 @@ function viewEmployees() {
 // Function to view all departments
 function viewDepartments() {
     console.log("Viewing all departments");
-    client.query(`SELECT * FROM department`, (err, res) => {
+    pool.query(`SELECT * FROM department`, (err, res) => {
         if (err)
             throw err;
         console.log("Departments");
